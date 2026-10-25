@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AM Radio Broadcasting: An Interactive Wireless Signal Modulation and Demodulation Simulator</title>
+  
+  <!-- Plotly.js: Local with CDN fallback -->
+  <script src="plotly.min.js"></script>
+  <script>
+    if (!window.Plotly) {
+      document.write('<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"><\/script>');
+    }
+  </script>
+
+  <!-- Google Fonts for sleek tech UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #070b14;
+      --bg-secondary: #0d1527;
+      --bg-card: rgba(16, 26, 48, 0.75);
+      --bg-card-hover: rgba(22, 36, 66, 0.85);
+      --border-color: rgba(56, 189, 248, 0.18);
+      --border-accent: rgba(56, 189, 248, 0.45);
+      
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-indigo: #818cf8;
+      
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --glow-cyan: 0 0 20px rgba(56, 189, 248, 0.25);
+      --glow-emerald: 0 0 20px rgba(16, 185, 129, 0.25);
+      --glow-amber: 0 0 20px rgba(245, 158, 11, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 40%),
+        linear-gradient(to bottom, #070b14, #0b1120);
+      min-height: 100vh;
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    .app-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* TOP HEADER & ON-AIR BADGE */
+    header.hero-header {
+      background: linear-gradient(135deg, rgba(13, 21, 39, 0.95), rgba(20, 32, 59, 0.85));
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), var(--glow-cyan);
+      backdrop-filter: blur(12px);
+    }
+
+    header.hero-header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald), var(--accent-amber), var(--accent-rose));
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .station-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      padding: 5px 14px;
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #fda4af;
+      text-transform: uppercase;
+    }
+
+    .pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background-color: var(--accent-rose);
+      box-shadow: 0 0 10px var(--accent-rose);
+      animation: pulseAnimation 1.6s infinite ease-in-out;
+    }
+
+    @keyframes pulseAnimation {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.75); }
+    }
+
+    .meta-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-cyan);
+    }
+
+    h1.project-title {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    p.project-subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 6px;
+      max-width: 950px;
+    }
+
+    /* PRESETS BAR */
+    .presets-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .presets-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .preset-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-cyan);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .preset-btn.active {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(14, 165, 233, 0.15));
+      border-color: var(--accent-cyan);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    }
+
+    /* TELEMETRY METRICS GRID */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-accent);
+    }
+
+    .metric-title {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .metric-value {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+    }
+
+    .metric-unit {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--text-dim);
+    }
+
+    .metric-status-badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-under {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .status-crit {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-over {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    /* MAIN WORKSPACE LAYOUT (2-COLUMN) */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* CONTROL PANEL STYLES */
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .panel-header h3 {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+    }
+
+    .slider-label {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .slider-readout {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: rgba(15, 23, 42, 0.8);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+      transition: transform 0.1s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      padding: 6px 0;
+    }
+
+    /* ACTION BUTTONS */
+    .button-stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 0.84rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      box-shadow: 0 6px 18px rgba(56, 189, 248, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: rgba(148, 163, 184, 0.4);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    }
+
+    .btn-emerald:hover {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-emerald.active {
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
+    }
+
+    /* OSCILLOSCOPE & PLOTS AREA */
+    .plots-area {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .plot-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .plot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .plot-title {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .plot-equation {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      background: rgba(15, 23, 42, 0.7);
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.15);
+    }
+
+    .plot-container {
+      width: 100%;
+      height: 230px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #090e1a;
+      border: 1px solid rgba(30, 41, 59, 0.8);
+    }
+
+    /* PRACTICAL AM BROADCASTING SECTION */
+    .practical-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 10px;
+    }
+
+    .section-headline {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-bottom: 20px;
+      max-width: 1100px;
+    }
+
+    /* INTERACTIVE BLOCK DIAGRAM */
+    .block-diagram-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 16px 8px;
+      margin-bottom: 24px;
+      background: rgba(11, 18, 33, 0.7);
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.12);
+    }
+
+    .block-node {
+      flex: 1;
+      min-width: 130px;
+      background: rgba(19, 30, 54, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .block-node:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(30, 48, 86, 0.9);
+      transform: translateY(-2px);
+    }
+
+    .block-node.active-stage {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+      background: rgba(30, 58, 102, 0.9);
+    }
+
+    .block-icon {
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+
+    .block-name {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .block-sub {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .diagram-arrow {
+      color: var(--accent-cyan);
+      font-size: 1.2rem;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    /* PRACTICAL APPLICATIONS GRID */
+    .practical-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .app-card {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 10px;
+      padding: 18px;
+      transition: border-color 0.2s ease;
+    }
+
+    .app-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .app-card-title {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-card p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+
+    .highlight-pill {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(56, 189, 248, 0.08);
+      color: var(--accent-cyan);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    /* FOOTER */
+    footer.app-footer {
+      background: linear-gradient(180deg, rgba(13, 21, 39, 0.95), #070b14);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+      margin-top: 10px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .footer-credits {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+    }
+
+    .footer-credits span {
+      color: var(--accent-cyan);
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+
+    .footer-sub {
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      margin-top: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .footer-tags {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .footer-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      background: rgba(30, 41, 59, 0.5);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    /* AUDIO VU METER VISUALIZER */
+    .vu-meter-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(11, 18, 33, 0.8);
+      border-radius: 8px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      margin-top: 10px;
+    }
+
+    .vu-meter-bar {
+      flex: 1;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .vu-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #10b981 60%, #f59e0b 85%, #f43f5e 100%);
+      transition: width 0.08s ease;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    /* COLLAPSIBLE THEORY ACCORDION */
+    details.theory-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-top: 6px;
+    }
+
+    details.theory-card summary {
+      font-family: 'Chakra Petch', sans-serif;
+      font-weight: 600;
+      color: #ffffff;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    details.theory-card .theory-body {
+      padding-top: 14px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .theory-box {
+      background: rgba(11, 18, 33, 0.6);
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .theory-box h4 {
+      color: var(--accent-cyan);
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+      font-family: 'Chakra Petch', sans-serif;
+    }
+
+    /* RESPONSIVENESS */
+    @media (max-width: 768px) {
+      body {
+        padding: 8px;
+      }
+      header.hero-header {
+        padding: 16px;
+      }
+      .plot-container {
+        height: 190px;
+      }
+      .button-stack {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- HEADER -->
+    <header class="hero-header">
+      <div class="header-top">
+        <div class="station-badge">
+          <span class="pulse-dot"></span>
+          <span>Transmitter Active &bull; MW Band</span>
+        </div>
+        <div class="meta-pills">
+          <span class="pill">DSB-FC Standard</span>
+          <span class="pill">Medium Wave: 535 - 1605 kHz</span>
+          <span class="pill">Web Audio Synthesizer</span>
+        </div>
+      </div>
+      <h1 class="project-title">AM Radio Broadcasting: An Interactive Wireless Signal Modulation and Demodulation Simulator</h1>
+      <p class="project-subtitle">
+        A real-time radio frequency laboratory simulating audio signal conditioning, high-frequency carrier modulation, wireless channel propagation, envelope detection, and spectral power distribution.
+      </p>
+    </header>
+
+    <!-- REAL-WORLD BROADCAST PRESETS -->
+    <div class="presets-container">
+      <div class="presets-label">
+        <span>📻 Broadcast Presets:</span>
+      </div>
+      <div class="preset-btn-group">
+        <button class="preset-btn active" onclick="applyPreset('news')">
+          🎙️ Commercial Talk / News (70% Mod)
+        </button>
+        <button class="preset-btn" onclick="applyPreset('music')">
+          🎵 High-Fidelity Music (85% Mod)
+        </button>
+        <button class="preset-btn" onclick="applyPreset('critical')">
+          🎯 Critical 100% Modulation (Max Power)
+        </button>
+        <button class="preset-btn" onclick="applyPreset('overmod')">
+          ⚠️ Transmitter Overdrive (Distortion & Splatter)
+        </button>
+        <button class="preset-btn" onclick="applyPreset('night')">
+          🌌 Nighttime Ionospheric DX (With Static)
+        </button>
+      </div>
+    </div>
+
+    <!-- ENGINEERING TELEMETRY METRICS GRID -->
+    <div class="metrics-grid">
+      <!-- Modulation Index -->
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Modulation Index (μ)</span>
+          <span id="metricMuFormula">Am / Ac</span>
+        </div>
+        <div class="metric-value">
+          <span id="kpiMu">0.70</span>
+          <span class="metric-unit">ratio</span>
+        </div>
+        <div id="kpiStatusBadge" class="metric-status-badge status-under">Under-Modulation (Safe)</div>
+      </div>
+
+      <!-- Modulation Percentage -->
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Modulation Depth</span>
+          <span>%</span>
+        </div>
+        <div class="metric-value">
+          <span id="kpiModPercent">70.0</span>
+          <span class="metric-unit">%</span>
+        </div>
+        <div class="metric-status-badge status-under" id="kpiDepthDesc">Clean Audio Envelope</div>
+      </div>
+
+      <!-- Transmission RF Bandwidth -->
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>RF Bandwidth (BW)</span>
+          <span>2 &times; fm</span>
+        </div>
+        <div class="metric-value">
+          <span id="kpiBandwidth">6.00</span>
+          <span class="metric-unit">kHz</span>
+        </div>
+        <div class="metric-status-badge status-under" id="kpiBwDesc">Fits 10 kHz AM Channel</div>
+      </div>
+
+      <!-- Transmitter Power Efficiency -->
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>TX Power Efficiency (η)</span>
+          <span>P_sb / P_total</span>
+        </div>
+        <div class="metric-value">
+          <span id="kpiEfficiency">19.7</span>
+          <span class="metric-unit">%</span>
+        </div>
+        <div class="metric-status-badge status-under" id="kpiEffDesc">Sideband Power = 19.7%</div>
+      </div>
+
+      <!-- Theoretical Antenna Size -->
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Quarter-Wave Antenna</span>
+          <span>λ / 4</span>
+        </div>
+        <div class="metric-value">
+          <span id="kpiAntenna">3.75</span>
+          <span class="metric-unit">km</span>
+        </div>
+        <div class="metric-status-badge status-under" id="kpiAntennaDesc">Audio Alone: 75 km!</div>
+      </div>
+    </div>
+
+    <!-- WORKSPACE (CONTROLS + OSCILLOSCOPE) -->
+    <div class="workspace-grid">
+      
+      <!-- LEFT COLUMN: CONTROLS CONSOLE -->
+      <div class="controls-panel">
+        
+        <!-- MESSAGE SIGNAL CONTROLS -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>🎙️ Studio Audio Source (Message)</h3>
+            <span class="slider-readout" id="mAmpBadge">7.0 V</span>
+          </div>
+          <div class="slider-group">
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span class="slider-label">Audio Amplitude (A<sub>m</sub>)</span>
+                <span id="mAmpVal" class="slider-readout">7 V</span>
+              </div>
+              <input type="range" id="mAmp" min="1" max="20" value="7" step="0.5">
+            </div>
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span class="slider-label">Audio Frequency (f<sub>m</sub>)</span>
+                <span id="mFreqVal" class="slider-readout">1000 Hz</span>
+              </div>
+              <input type="range" id="mFreq" min="200" max="4000" value="1000" step="50">
+            </div>
+          </div>
+        </div>
+
+        <!-- RF CARRIER OSCILLATOR -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>⚡ RF Carrier Oscillator</h3>
+            <span class="slider-readout" id="cAmpBadge">10.0 V</span>
+          </div>
+          <div class="slider-group">
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span class="slider-label">Carrier Amplitude (A<sub>c</sub>)</span>
+                <span id="cAmpVal" class="slider-readout">10 V</span>
+              </div>
+              <input type="range" id="cAmp" min="2" max="20" value="10" step="0.5">
+            </div>
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span class="slider-label">Carrier Frequency (f<sub>c</sub>)</span>
+                <span id="cFreqVal" class="slider-readout">20000 Hz</span>
+              </div>
+              <input type="range" id="cFreq" min="10000" max="40000" value="20000" step="1000">
+            </div>
+          </div>
+        </div>
+
+        <!-- WIRELESS CHANNEL & NOISE -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>☁️ Wireless Channel & Noise</h3>
+            <span class="slider-readout" id="noiseBadge">0 %</span>
+          </div>
+          <div class="slider-group">
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span class="slider-label">Atmospheric Noise & Static</span>
+                <span id="noiseVal" class="slider-readout">0 %</span>
+              </div>
+              <input type="range" id="channelNoise" min="0" max="30" value="0" step="2">
+            </div>
+          </div>
+        </div>
+
+        <!-- AUDIO DEMODULATOR & SOUND SYNTHESIS -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>🔊 Live Audio Synthesizer</h3>
+            <span class="pill" id="audioStatusPill">Muted</span>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">
+            Listen to the recovered audio. Notice how overmodulation (μ &gt; 1) introduces harsh acoustic clipping distortion!
+          </p>
+          <button id="toggleAudioBtn" class="btn btn-emerald" style="width:100%;" onclick="toggleAudioDemo()">
+            ▶ Play Demodulated Audio
+          </button>
+          
+          <div class="vu-meter-container">
+            <span style="font-size:0.75rem; color:var(--text-muted); font-family:'JetBrains Mono'">VU:</span>
+            <div class="vu-meter-bar">
+              <div id="vuMeterFill" class="vu-meter-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PLAYBACK & ACTIONS -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>🎛️ Oscilloscope Controls</h3>
+          </div>
+          <div class="button-stack">
+            <button id="animBtn" class="btn btn-primary" onclick="toggleAnimation()">
+              ⏸ Pause Sweep
+            </button>
+            <button class="btn btn-secondary" onclick="resetDefaults()">
+              🔄 Reset
+            </button>
+          </div>
+          <div class="button-stack" style="margin-top:10px;">
+            <button class="btn btn-secondary" onclick="downloadAllPlots()" style="grid-column: span 2;">
+              📷 Export Waveforms (PNG)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: SIGNAL OSCILLOSCOPE TRACES -->
+      <div class="plots-area">
+        
+        <!-- 1. AUDIO MESSAGE SIGNAL -->
+        <div class="plot-panel">
+          <div class="plot-header">
+            <div class="plot-title">
+              <span style="color:var(--accent-emerald)">●</span>
+              <span>1. Baseband Audio Message Signal m(t)</span>
+            </div>
+            <div class="plot-equation">m(t) = A<sub>m</sub> cos(2π f<sub>m</sub> t)</div>
+          </div>
+          <div id="messagePlot" class="plot-container"></div>
+        </div>
+
+        <!-- 2. RF CARRIER WAVE -->
+        <div class="plot-panel">
+          <div class="plot-header">
+            <div class="plot-title">
+              <span style="color:var(--accent-cyan)">●</span>
+              <span>2. High-Frequency RF Carrier Wave c(t)</span>
+            </div>
+            <div class="plot-equation">c(t) = A<sub>c</sub> cos(2π f<sub>c</sub> t)</div>
+          </div>
+          <div id="carrierPlot" class="plot-container"></div>
+        </div>
+
+        <!-- 3. AM MODULATED BROADCAST WAVE WITH ENVELOPE -->
+        <div class="plot-panel">
+          <div class="plot-header">
+            <div class="plot-title">
+              <span style="color:var(--accent-amber)">●</span>
+              <span>3. Transmitted AM Wave s(t) with Envelope Boundary</span>
+            </div>
+            <div class="plot-equation">s(t) = [A<sub>c</sub> + m(t)] cos(2π f<sub>c</sub> t)</div>
+          </div>
+          <div id="modulatedPlot" class="plot-container"></div>
+        </div>
+
+        <!-- 4. DEMODULATED RECEIVER OUTPUT -->
+        <div class="plot-panel">
+          <div class="plot-header">
+            <div class="plot-title">
+              <span style="color:var(--accent-rose)">●</span>
+              <span>4. Receiver Diode Detection & RC Envelope Filter Output</span>
+            </div>
+            <div class="plot-equation">v<sub>out</sub>(t) ≈ LowPass[ |s(t)| ]</div>
+          </div>
+          <div id="demodulatedPlot" class="plot-container"></div>
+        </div>
+
+        <!-- 5. RF FREQUENCY SPECTRUM ANALYZER -->
+        <div class="plot-panel">
+          <div class="plot-header">
+            <div class="plot-title">
+              <span style="color:var(--accent-indigo)">●</span>
+              <span>5. RF Spectrum Analyzer (Carrier & Sidebands)</span>
+            </div>
+            <div class="plot-equation">LSB (f<sub>c</sub> - f<sub>m</sub>) | Carrier (f<sub>c</sub>) | USB (f<sub>c</sub> + f<sub>m</sub>)</div>
+          </div>
+          <div id="spectrumPlot" class="plot-container"></div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- PRACTICAL REAL-WORLD BROADCASTING SECTION -->
+    <section class="practical-section">
+      <h2 class="section-headline">
+        <span>📡 Real-World AM Radio Broadcasting Architecture & Physics</span>
+      </h2>
+      <p class="section-desc">
+        Amplitude Modulation is the bedrock of global wireless telecommunications. Below is the full engineering signal path from the radio studio microphone to the listener's loudspeaker, along with key physical constraints governing wireless broadcasting.
+      </p>
+
+      <!-- INTERACTIVE STAGE FLOW DIAGRAM -->
+      <div class="block-diagram-container">
+        <div class="block-node active-stage" onclick="highlightStage('studio')">
+          <div class="block-icon">🎙️</div>
+          <div class="block-name">Audio Source</div>
+          <div class="block-sub">Voice / Music (300Hz-5kHz)</div>
+        </div>
+        <div class="diagram-arrow">➔</div>
+        
+        <div class="block-node" onclick="highlightStage('oscillator')">
+          <div class="block-icon">⚡</div>
+          <div class="block-name">RF Carrier Gen</div>
+          <div class="block-sub">Local Synthesizer (MW Band)</div>
+        </div>
+        <div class="diagram-arrow">➔</div>
+
+        <div class="block-node" onclick="highlightStage('modulator')">
+          <div class="block-icon">🎛️</div>
+          <div class="block-name">AM Modulator</div>
+          <div class="block-sub">DSB-FC Multiplier</div>
+        </div>
+        <div class="diagram-arrow">➔</div>
+
+        <div class="block-node" onclick="highlightStage('poweramp')">
+          <div class="block-icon">📡</div>
+          <div class="block-name">TX Power Amp</div>
+          <div class="block-sub">50 kW Broadcast Mast</div>
+        </div>
+        <div class="diagram-arrow">➔</div>
+
+        <div class="block-node" onclick="highlightStage('channel')">
+          <div class="block-icon">☁️</div>
+          <div class="block-name">Wireless Channel</div>
+          <div class="block-sub">Skywave / Groundwave + Noise</div>
+        </div>
+        <div class="diagram-arrow">➔</div>
+
+        <div class="block-node" onclick="highlightStage('detector')">
+          <div class="block-icon">💡</div>
+          <div class="block-name">Envelope Detector</div>
+          <div class="block-sub">Diode + RC Low-Pass Filter</div>
+        </div>
+        <div class="diagram-arrow">➔</div>
+
+        <div class="block-node" onclick="highlightStage('speaker')">
+          <div class="block-icon">🔈</div>
+          <div class="block-name">Speaker Output</div>
+          <div class="block-sub">Acoustic Audio Wave</div>
+        </div>
+      </div>
+
+      <!-- PRACTICAL REAL-WORLD APPLICATION CARDS -->
+      <div class="practical-grid">
+        <div class="app-card">
+          <div class="app-card-title">
+            <span>✈️ Civil Aviation & Air Traffic Control</span>
+          </div>
+          <p>
+            Why does commercial aircraft communication (118–137 MHz VHF) strictly mandate AM instead of FM? In FM, the <b>"Capture Effect"</b> forces the receiver to latch exclusively onto the stronger signal, totally silencing any weaker transmission. AM has <b>no capture effect</b>—if an emergency aircraft transmits over another tower call, both voices are heard simultaneously as a heterodyned heterodyne whistle, ensuring life-critical distress calls are never blocked.
+          </p>
+          <span class="highlight-pill">Safety Standard: ICAO Annex 10</span>
+        </div>
+
+        <div class="app-card">
+          <div class="app-card-title">
+            <span>🌌 Long-Distance Nighttime Skywave (Ionosphere)</span>
+          </div>
+          <p>
+            Medium Wave AM signals (535–1605 kHz) propagate during the daytime purely via <b>ground waves</b> (range ~100–200 km) because the solar-ionized D-layer absorbs RF energy. At night, the D-layer dissipates, allowing AM waves to reach the higher E and F layers of the ionosphere, reflecting back to Earth thousands of kilometers away (DX propagation).
+          </p>
+          <span class="highlight-pill">Propagation: Ionospheric Refraction</span>
+        </div>
+
+        <div class="app-card">
+          <div class="app-card-title">
+            <span>📏 Antenna Physics & The Need for Modulation</span>
+          </div>
+          <p>
+            An efficient transmission antenna requires physical height comparable to a quarter wavelength: <b>L = λ / 4 = c / (4 &times; f)</b>. To transmit a 1000 Hz audio tone directly without modulation would require an antenna height of <b>75 kilometers</b>! By modulating onto a 1 MHz RF carrier, the physical antenna size shrinks to an easily constructible <b>75 meters</b>.
+          </p>
+          <span class="highlight-pill">Antenna Equation: L = 300,000 / (4 &times; f_kHz)</span>
+        </div>
+
+        <div class="app-card">
+          <div class="app-card-title">
+            <span>📻 The Envelope Detector & Zero-Power Crystal Radios</span>
+          </div>
+          <p>
+            The greatest commercial advantage of AM (DSB-FC) is the extreme simplicity of the receiver. A simple germanium diode followed by an RC low-pass filter (time constant chosen such that <b>1/f<sub>c</sub> &ll; RC &ll; 1/f<sub>m</sub></b>) recovers the original audio without needing active local oscillators or microprocessors. This enabled millions of batteryless crystal radio sets during early radio history.
+          </p>
+          <span class="highlight-pill">Filter Criterion: 1/f_c &ll; RC &ll; 1/f_m</span>
+        </div>
+      </div>
+
+      <!-- COLLAPSIBLE FORMULAS & THEORY -->
+      <details class="theory-card">
+        <summary>
+          <span>📐 Mathematical Derivations & Power Equations (Click to Expand)</span>
+        </summary>
+        <div class="theory-body">
+          <div class="theory-box">
+            <h4>Modulated Wave Expansion</h4>
+            <p>s(t) = [A<sub>c</sub> + A<sub>m</sub>cos(2πf<sub>m</sub>t)] cos(2πf<sub>c</sub>t)</p>
+            <p>= A<sub>c</sub>cos(2πf<sub>c</sub>t) + &frac12; μ A<sub>c</sub>cos(2π(f<sub>c</sub> + f<sub>m</sub>)t) + &frac12; μ A<sub>c</sub>cos(2π(f<sub>c</sub> - f<sub>m</sub>)t)</p>
+            <p>Reveals three distinct spectral frequencies: Carrier (f<sub>c</sub>), Upper Sideband (f<sub>c</sub>+f<sub>m</sub>), and Lower Sideband (f<sub>c</sub>-f<sub>m</sub>).</p>
+          </div>
+          <div class="theory-box">
+            <h4>Transmitter Power Distribution</h4>
+            <p>Total Power: P<sub>t</sub> = P<sub>c</sub> (1 + μ&sup2; / 2)</p>
+            <p>Carrier Power: P<sub>c</sub> = A<sub>c</sub>&sup2; / (2R)</p>
+            <p>Sideband Power: P<sub>sb</sub> = P<sub>c</sub> &times; (μ&sup2; / 2)</p>
+            <p>At 100% modulation (μ=1), two-thirds (66.7%) of broadcast power is consumed by the unmodulated carrier wave.</p>
+          </div>
+          <div class="theory-box">
+            <h4>Power Efficiency & Bandwidth</h4>
+            <p>Efficiency: η = P<sub>sb</sub> / P<sub>t</sub> = μ&sup2; / (2 + μ&sup2;)</p>
+            <p>Maximum theoretical efficiency for tone AM is 33.3% at μ = 1.</p>
+            <p>Transmission Bandwidth: BW = 2 &times; f<sub>m</sub></p>
+            <p>Commercial AM channels are spaced 10 kHz apart (US/FCC) or 9 kHz (Europe/Asia/ITU).</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- FOOTER WITH REQUESTED CREDITS -->
+    <footer class="app-footer">
+      <div class="footer-credits">
+        Made by <span>Sraeyes, Kaushik, Padmesh</span>
+      </div>
+      <div class="footer-sub">
+        AM Radio Broadcasting: An Interactive Wireless Signal Modulation and Demodulation Simulator
+      </div>
+      <div class="footer-tags">
+        <span class="footer-tag">Wireless Communications Lab</span>
+        <span class="footer-tag">Signal Processing & Telecommunications</span>
+        <span class="footer-tag">Interactive Engineering Simulator</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- SIMULATION CORE JAVASCRIPT -->
+  <script>
+    // --- GLOBAL STATE & CONFIGURATION ---
+    const N = 1024;                    // High sampling density for crisp curves & fast FFT
+    const duration = 0.001;            // 1 millisecond window -> Fs = 1.024 MHz
+    let t = new Float64Array(N);
+    let messageData = new Float64Array(N);
+    let carrierData = new Float64Array(N);
+    let modulatedData = new Float64Array(N);
+    let demodulatedData = new Float64Array(N);
+    let upperEnv = new Float64Array(N);
+    let lowerEnv = new Float64Array(N);
+
+    let isAnimating = true;
+    let animShift = 0;
+    let animReqId = null;
+
+    // Web Audio Synthesizer State
+    let audioCtx = null;
+    let oscNode = null;
+    let gainNode = null;
+    let shaperNode = null;
+    let noiseNode = null;
+    let noiseGainNode = null;
+    let isAudioPlaying = false;
+    let vuInterval = null;
+
+    // Initialize Time Array
+    for (let i = 0; i < N; i++) {
+      t[i] = (i * duration) / N;
+    }
+
+    // --- SIGNAL COMPUTATION & ENVELOPE DETECTION ---
+    function computeSignals(shift = 0) {
+      const Am = parseFloat(document.getElementById("mAmp").value);
+      const Ac = parseFloat(document.getElementById("cAmp").value);
+      const fm = parseFloat(document.getElementById("mFreq").value);
+      const fc = parseFloat(document.getElementById("cFreq").value);
+      const noiseLevel = parseFloat(document.getElementById("channelNoise").value) / 100;
+
+      const mu = Am / Ac;
+      const modPercent = (mu * 100).toFixed(1);
+      const bandwidth = ((2 * fm) / 1000).toFixed(2);
+      const efficiency = ((mu * mu) / (2 + mu * mu) * 100).toFixed(1);
+      const antennaQuarterKm = (300000 / (4 * fc)).toFixed(2);
+      const audioAntennaKm = (300000 / (4 * fm)).toFixed(1);
+
+      // Update KPIs & Telemetry
+      document.getElementById("kpiMu").innerText = mu.toFixed(2);
+      document.getElementById("kpiModPercent").innerText = modPercent;
+      document.getElementById("kpiBandwidth").innerText = bandwidth;
+      document.getElementById("kpiEfficiency").innerText = efficiency;
+      document.getElementById("kpiAntenna").innerText = antennaQuarterKm;
+      document.getElementById("kpiAntennaDesc").innerText = `Audio Alone: ${audioAntennaKm} km!`;
+
+      // Status Badges
+      const badge = document.getElementById("kpiStatusBadge");
+      const depthDesc = document.getElementById("kpiDepthDesc");
+      if (mu < 0.98) {
+        badge.innerText = "Under-Modulation (Safe)";
+        badge.className = "metric-status-badge status-under";
+        depthDesc.innerText = "Clean Envelope, No Splatter";
+      } else if (mu >= 0.98 && mu <= 1.02) {
+        badge.innerText = "Critical Modulation (100%)";
+        badge.className = "metric-status-badge status-crit";
+        depthDesc.innerText = "Max Carrier Utilization";
+      } else {
+        badge.innerText = "Over-Modulation (Distortion!)";
+        badge.className = "metric-status-badge status-over";
+        depthDesc.innerText = "Envelope Inversion & Splatter";
+      }
+
+      document.getElementById("kpiEffDesc").innerText = `Sideband Power = ${efficiency}%`;
+
+      // Compute Waveform Arrays
+      const twoPiFm = 2 * Math.PI * fm;
+      const twoPiFc = 2 * Math.PI * fc;
+
+      for (let i = 0; i < N; i++) {
+        const time = t[i] + shift;
+        const msg = Am * Math.cos(twoPiFm * time);
+        const car = Ac * Math.cos(twoPiFc * time);
+        
+        // Add pseudo-random channel noise if enabled
+        const noise = noiseLevel > 0 ? (Math.random() * 2 - 1) * (Ac * noiseLevel) : 0;
+        const mod = (Ac + msg) * Math.cos(twoPiFc * time) + noise;
+
+        messageData[i] = msg;
+        carrierData[i] = car;
+        modulatedData[i] = mod;
+        upperEnv[i] = Ac + msg;
+        lowerEnv[i] = -(Ac + msg);
+      }
+
+      // Simulate Diode + RC Envelope Detector (Half-wave rectification + low-pass filter)
+      let rcFiltered = 0;
+      // RC time constant optimal approximation: 1 / sqrt(fm * fc * 4)
+      const rcAlpha = Math.min(0.25, (fm / fc) * 4); 
+      for (let i = 0; i < N; i++) {
+        const rectified = Math.max(0, modulatedData[i]); // diode half-wave rectification
+        // exponential single-pole smoothing
+        rcFiltered += rcAlpha * (rectified - rcFiltered);
+        demodulatedData[i] = rcFiltered;
+      }
+
+      // Update Audio Synthesizer if active
+      updateLiveAudio(fm, mu, noiseLevel);
+    }
+
+    // --- FAST RADIX-2 COOLEY-TUKEY FFT ---
+    function computeFFT(signal) {
+      const n = signal.length;
+      let re = new Float64Array(signal);
+      let im = new Float64Array(n);
+
+      // Bit reversal permutation
+      for (let i = 1, j = 0; i < n; i++) {
+        let bit = n >> 1;
+        for (; j & bit; bit >>= 1) j ^= bit;
+        j ^= bit;
+        if (i < j) {
+          let tr = re[i]; re[i] = re[j]; re[j] = tr;
+          let ti = im[i]; im[i] = im[j]; im[j] = ti;
+        }
+      }
+
+      // Cooley-Tukey butterflies
+      for (let len = 2; len <= n; len <<= 1) {
+        const half = len >> 1;
+        const ang = -2 * Math.PI / len;
+        const wstepR = Math.cos(ang);
+        const wstepI = Math.sin(ang);
+        for (let i = 0; i < n; i += len) {
+          let wr = 1, wi = 0;
+          for (let j = 0; j < half; j++) {
+            const uR = re[i + j], uI = im[i + j];
+            const vR = re[i + j + half] * wr - im[i + j + half] * wi;
+            const vI = re[i + j + half] * wi + im[i + j + half] * wr;
+            re[i + j] = uR + vR;
+            im[i + j] = uI + vI;
+            re[i + j + half] = uR - vR;
+            im[i + j + half] = uI - vI;
+            const nextWr = wr * wstepR - wi * wstepI;
+            wi = wr * wstepI + wi * wstepR;
+            wr = nextWr;
+          }
+        }
+      }
+
+      // Extract single-sided spectrum up to 50 kHz
+      const maxFreqLimit = 50000;
+      const freqStep = (1 / duration);
+      const halfN = n / 2;
+      const freq = [];
+      const mag = [];
+
+      for (let k = 0; k < halfN; k++) {
+        const f = k * freqStep;
+        if (f > maxFreqLimit) break;
+        freq.push(f);
+        // Normalize magnitude
+        const magnitude = (2 * Math.sqrt(re[k] * re[k] + im[k] * im[k])) / n;
+        mag.push(magnitude);
+      }
+
+      return { freq, mag };
+    }
+
+    // --- PLOTLY DARK ENGINEERING THEME ---
+    const commonLayout = {
+      margin: { t: 25, r: 25, b: 35, l: 45 },
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: '#090e1a',
+      font: { family: 'JetBrains Mono, monospace', color: '#94a3b8', size: 11 },
+      showlegend: false,
+      xaxis: {
+        gridcolor: 'rgba(51, 65, 85, 0.4)',
+        zerolinecolor: 'rgba(148, 163, 184, 0.3)',
+        tickfont: { color: '#64748b' }
+      },
+      yaxis: {
+        gridcolor: 'rgba(51, 65, 85, 0.4)',
+        zerolinecolor: 'rgba(148, 163, 184, 0.3)',
+        tickfont: { color: '#64748b' }
+      }
+    };
+
+    function initPlots() {
+      // 1. Message Plot
+      Plotly.newPlot("messagePlot", [{
+        x: Array.from(t),
+        y: Array.from(messageData),
+        mode: "lines",
+        line: { color: "#10b981", width: 2 }
+      }], {
+        ...commonLayout,
+        yaxis: { ...commonLayout.yaxis, title: { text: "Volts", font: { size: 10 } } }
+      }, { responsive: true, displayModeBar: false });
+
+      // 2. Carrier Plot
+      Plotly.newPlot("carrierPlot", [{
+        x: Array.from(t),
+        y: Array.from(carrierData),
+        mode: "lines",
+        line: { color: "#38bdf8", width: 1.5 }
+      }], {
+        ...commonLayout,
+        yaxis: { ...commonLayout.yaxis, title: { text: "Volts", font: { size: 10 } } }
+      }, { responsive: true, displayModeBar: false });
+
+      // 3. Modulated Plot with Upper & Lower Envelope Boundaries
+      Plotly.newPlot("modulatedPlot", [
+        {
+          x: Array.from(t),
+          y: Array.from(modulatedData),
+          mode: "lines",
+          name: "RF Modulated Wave",
+          line: { color: "#f59e0b", width: 1.5 }
+        },
+        {
+          x: Array.from(t),
+          y: Array.from(upperEnv),
+          mode: "lines",
+          name: "+ Envelope",
+          line: { color: "rgba(255, 255, 255, 0.65)", width: 1.5, dash: "dot" }
+        },
+        {
+          x: Array.from(t),
+          y: Array.from(lowerEnv),
+          mode: "lines",
+          name: "- Envelope",
+          line: { color: "rgba(255, 255, 255, 0.65)", width: 1.5, dash: "dot" }
+        }
+      ], {
+        ...commonLayout,
+        showlegend: true,
+        legend: { x: 0.8, y: 1.15, orientation: "h", font: { size: 10, color: "#94a3b8" } },
+        yaxis: { ...commonLayout.yaxis, title: { text: "Volts", font: { size: 10 } } }
+      }, { responsive: true, displayModeBar: false });
+
+      // 4. Demodulated Plot
+      Plotly.newPlot("demodulatedPlot", [{
+        x: Array.from(t),
+        y: Array.from(demodulatedData),
+        mode: "lines",
+        line: { color: "#f43f5e", width: 2 }
+      }], {
+        ...commonLayout,
+        yaxis: { ...commonLayout.yaxis, title: { text: "Filtered V", font: { size: 10 } } }
+      }, { responsive: true, displayModeBar: false });
+
+      // 5. Spectrum Plot
+      updateSpectrumPlot();
+    }
+
+    function updateSpectrumPlot() {
+      const fft = computeFFT(modulatedData);
+      Plotly.newPlot("spectrumPlot", [{
+        x: fft.freq,
+        y: fft.mag,
+        type: "bar",
+        marker: { color: "#818cf8" }
+      }], {
+        ...commonLayout,
+        xaxis: { ...commonLayout.xaxis, title: { text: "Frequency (Hz)", font: { size: 10 } } },
+        yaxis: { ...commonLayout.yaxis, title: { text: "Magnitude (V)", font: { size: 10 } } }
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function updateStaticPlots() {
+      Plotly.react("messagePlot", [{
+        x: Array.from(t),
+        y: Array.from(messageData),
+        mode: "lines",
+        line: { color: "#10b981", width: 2 }
+      }], {
+        ...commonLayout,
+        yaxis: { ...commonLayout.yaxis, title: { text: "Volts", font: { size: 10 } } }
+      });
+
+      Plotly.react("carrierPlot", [{
+        x: Array.from(t),
+        y: Array.from(carrierData),
+        mode: "lines",
+        line: { color: "#38bdf8", width: 1.5 }
+      }], {
+        ...commonLayout,
+        yaxis: { ...commonLayout.yaxis, title: { text: "Volts", font: { size: 10 } } }
+      });
+
+      Plotly.react("modulatedPlot", [
+        {
+          x: Array.from(t),
+          y: Array.from(modulatedData),
+          mode: "lines",
+          name: "RF Modulated Wave",
+          line: { color: "#f59e0b", width: 1.5 }
+        },
+        {
+          x: Array.from(t),
+          y: Array.from(upperEnv),
+          mode: "lines",
+          name: "+ Envelope",
+          line: { color: "rgba(255, 255, 255, 0.65)", width: 1.5, dash: "dot" }
+        },
+        {
+          x: Array.from(t),
+          y: Array.from(lowerEnv),
+          mode: "lines",
+          name: "- Envelope",
+          line: { color: "rgba(255, 255, 255, 0.65)", width: 1.5, dash: "dot" }
+        }
+      ], {
+        ...commonLayout,
+        showlegend: true,
+        legend: { x: 0.8, y: 1.15, orientation: "h", font: { size: 10, color: "#94a3b8" } },
+        yaxis: { ...commonLayout.yaxis, title: { text: "Volts", font: { size: 10 } } }
+      });
+
+      Plotly.react("demodulatedPlot", [{
+        x: Array.from(t),
+        y: Array.from(demodulatedData),
+        mode: "lines",
+        line: { color: "#f43f5e", width: 2 }
+      }], {
+        ...commonLayout,
+        yaxis: { ...commonLayout.yaxis, title: { text: "Filtered V", font: { size: 10 } } }
+      });
+
+      updateSpectrumPlot();
+    }
+
+    // --- ANIMATION SWEEP LOOP ---
+    function animationLoop() {
+      if (!isAnimating) return;
+      animShift += 0.000015;
+      computeSignals(animShift);
+
+      // Fast restyle of dynamic traces
+      Plotly.restyle("modulatedPlot", {
+        y: [Array.from(modulatedData), Array.from(upperEnv), Array.from(lowerEnv)]
+      });
+      Plotly.restyle("demodulatedPlot", {
+        y: [Array.from(demodulatedData)]
+      });
+
+      animReqId = requestAnimationFrame(animationLoop);
+    }
+
+    function toggleAnimation() {
+      const btn = document.getElementById("animBtn");
+      if (isAnimating) {
+        isAnimating = false;
+        cancelAnimationFrame(animReqId);
+        btn.innerText = "▶ Resume Sweep";
+        btn.className = "btn btn-emerald";
+      } else {
+        isAnimating = true;
+        btn.innerText = "⏸ Pause Sweep";
+        btn.className = "btn btn-primary";
+        animationLoop();
+      }
+    }
+
+    // --- REAL-WORLD BROADCAST PRESETS ---
+    const presets = {
+      news: { Am: 7, Ac: 10, fm: 1000, fc: 20000, noise: 0 },
+      music: { Am: 8.5, Ac: 10, fm: 2400, fc: 25000, noise: 0 },
+      critical: { Am: 10, Ac: 10, fm: 1500, fc: 20000, noise: 0 },
+      overmod: { Am: 14, Ac: 10, fm: 1200, fc: 20000, noise: 0 },
+      night: { Am: 6, Ac: 10, fm: 900, fc: 18000, noise: 18 }
+    };
+
+    function applyPreset(type) {
+      const p = presets[type];
+      if (!p) return;
+
+      // Update Slider Elements
+      document.getElementById("mAmp").value = p.Am;
+      document.getElementById("cAmp").value = p.Ac;
+      document.getElementById("mFreq").value = p.fm;
+      document.getElementById("cFreq").value = p.fc;
+      document.getElementById("channelNoise").value = p.noise;
+
+      // Update Labels
+      document.getElementById("mAmpVal").innerText = p.Am + " V";
+      document.getElementById("mAmpBadge").innerText = p.Am.toFixed(1) + " V";
+      document.getElementById("cAmpVal").innerText = p.Ac + " V";
+      document.getElementById("cAmpBadge").innerText = p.Ac.toFixed(1) + " V";
+      document.getElementById("mFreqVal").innerText = p.fm + " Hz";
+      document.getElementById("cFreqVal").innerText = p.fc + " Hz";
+      document.getElementById("noiseVal").innerText = p.noise + " %";
+      document.getElementById("noiseBadge").innerText = p.noise + " %";
+
+      // Highlight button
+      document.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+      event.currentTarget.classList.add("active");
+
+      computeSignals(animShift);
+      updateStaticPlots();
+    }
+
+    function resetDefaults() {
+      applyPreset('news');
+    }
+
+    // --- INTERACTIVE BLOCK DIAGRAM HIGHLIGHTER ---
+    function highlightStage(stage) {
+      document.querySelectorAll(".block-node").forEach(node => node.classList.remove("active-stage"));
+      event.currentTarget.classList.add("active-stage");
+    }
+
+    // --- WEB AUDIO API REAL-TIME SYNTHESIZER ---
+    function initWebAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Main Oscillator (Tone m(t))
+        oscNode = audioCtx.createOscillator();
+        oscNode.type = "sine";
+
+        // Non-linear WaveShaper for Envelope Clipping Distortion Simulation
+        shaperNode = audioCtx.createWaveShaper();
+        shaperNode.curve = makeDistortionCurve(0.7);
+
+        // Volume Gain
+        gainNode = audioCtx.createGain();
+        gainNode.gain.setValueAtTime(0.18, audioCtx.currentTime);
+
+        // Noise Generator for Atmospheric Static
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = noiseBuffer;
+        noiseNode.loop = true;
+
+        noiseGainNode = audioCtx.createGain();
+        noiseGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+
+        // Routing: Osc -> Shaper -> Gain -> Destination
+        oscNode.connect(shaperNode);
+        shaperNode.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        // Noise Routing: Noise -> NoiseGain -> Destination
+        noiseNode.connect(noiseGainNode);
+        noiseGainNode.connect(audioCtx.destination);
+
+        oscNode.start();
+        noiseNode.start();
+      }
+    }
+
+    function makeDistortionCurve(mu) {
+      const n_samples = 44100;
+      const curve = new Float32Array(n_samples);
+      for (let i = 0; i < n_samples; ++i) {
+        const x = (i * 2) / n_samples - 1; // -1 to +1
+        if (mu <= 1.0) {
+          curve[i] = x; // Pure linear response
+        } else {
+          // Envelope inversion / cusp distortion characteristic of envelope diode detectors
+          const env = Math.abs(1 + mu * x);
+          curve[i] = ((env - 1) / mu) * 1.2;
+        }
+      }
+      return curve;
+    }
+
+    function updateLiveAudio(fm, mu, noiseLevel) {
+      if (!isAudioPlaying || !audioCtx) return;
+
+      // Scale audible frequency for comfortable human listening
+      const audibleFreq = Math.min(Math.max(fm, 220), 2800);
+      oscNode.frequency.setTargetAtTime(audibleFreq, audioCtx.currentTime, 0.05);
+
+      // Update envelope distortion curve
+      shaperNode.curve = makeDistortionCurve(mu);
+
+      // Update noise gain based on channel noise
+      noiseGainNode.gain.setTargetAtTime(noiseLevel * 0.12, audioCtx.currentTime, 0.05);
+    }
+
+    function toggleAudioDemo() {
+      const btn = document.getElementById("toggleAudioBtn");
+      const pill = document.getElementById("audioStatusPill");
+      const vuFill = document.getElementById("vuMeterFill");
+
+      if (!isAudioPlaying) {
+        initWebAudio();
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        gainNode.gain.setTargetAtTime(0.18, audioCtx.currentTime, 0.05);
+        isAudioPlaying = true;
+        btn.innerText = "⏹ Mute Demodulated Audio";
+        btn.className = "btn btn-emerald active";
+        pill.innerText = "Transmitting Audio";
+        pill.style.color = "#34d399";
+
+        // Start VU Meter simulation
+        vuInterval = setInterval(() => {
+          const mu = parseFloat(document.getElementById("mAmp").value) / parseFloat(document.getElementById("cAmp").value);
+          const pct = Math.min(100, Math.max(20, mu * 65 + Math.random() * 15));
+          vuFill.style.width = pct + "%";
+        }, 100);
+
+        computeSignals(animShift);
+      } else {
+        if (gainNode) {
+          gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+        }
+        if (noiseGainNode) {
+          noiseGainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+        }
+        isAudioPlaying = false;
+        btn.innerText = "▶ Play Demodulated Audio";
+        btn.className = "btn btn-emerald";
+        pill.innerText = "Muted";
+        pill.style.color = "var(--text-muted)";
+        clearInterval(vuInterval);
+        vuFill.style.width = "0%";
+      }
+    }
+
+    // --- DOWNLOAD PLOTS AS PNG ---
+    function downloadAllPlots() {
+      Plotly.downloadImage("modulatedPlot", {
+        format: "png",
+        width: 1200,
+        height: 500,
+        filename: "AM_Radio_Modulated_Signal_Sraeyes_Kaushik_Padmesh"
+      });
+    }
+
+    // --- EVENT LISTENERS & INITIALIZATION ---
+    function setupSliders() {
+      const sliderConfig = [
+        { id: "mAmp", valId: "mAmpVal", badgeId: "mAmpBadge", unit: " V" },
+        { id: "cAmp", valId: "cAmpVal", badgeId: "cAmpBadge", unit: " V" },
+        { id: "mFreq", valId: "mFreqVal", badgeId: null, unit: " Hz" },
+        { id: "cFreq", valId: "cFreqVal", badgeId: null, unit: " Hz" },
+        { id: "channelNoise", valId: "noiseVal", badgeId: "noiseBadge", unit: " %" }
+      ];
+
+      sliderConfig.forEach(item => {
+        const slider = document.getElementById(item.id);
+        const valElem = document.getElementById(item.valId);
+        const badgeElem = item.badgeId ? document.getElementById(item.badgeId) : null;
+
+        slider.addEventListener("input", () => {
+          valElem.innerText = slider.value + item.unit;
+          if (badgeElem) badgeElem.innerText = slider.value + item.unit;
+          computeSignals(animShift);
+          updateStaticPlots();
+        });
+      });
+    }
+
+    // Window Load Bootstrap
+    window.addEventListener("DOMContentLoaded", () => {
+      setupSliders();
+      computeSignals();
+      initPlots();
+      animationLoop();
+    });
+  </script>
+</body>
+</html>
