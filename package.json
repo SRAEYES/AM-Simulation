@@ -1,0 +1,22 @@
+{
+  "name": "am-broadcast-studio",
+  "version": "2.0.0",
+  "description": "Interactive AM Receiver & Signal Quality Analysis Studio",
+  "main": "index.html",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test/signal-engine.test.js && node test/verify-dom.js",
+    "start": "python -m http.server 8000"
+  },
+  "keywords": [
+    "amplitude-modulation",
+    "signal-processing",
+    "am-radio",
+    "envelope-detector",
+    "fft",
+    "web-audio-api",
+    "telecommunications"
+  ],
+  "author": "Sraeyes, Kaushik, Padmesh",
+  "license": "MIT"
+}
